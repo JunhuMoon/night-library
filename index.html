@@ -102,29 +102,85 @@
   }
   #hud.on{display:flex;}
   #hud .right{display:flex;align-items:center;gap:12px;}
+  #lifeRow{
+    color:#e8657d;letter-spacing:.16em;font-size:15px;
+    display:inline-block;transform-origin:center;
+  }
+  #lifeRow.hit{animation:lifeHit .55s ease;}
+  @keyframes lifeHit{
+    0%{transform:scale(1);   filter:none;}
+    18%{transform:scale(1.7); filter:brightness(2.2);}
+    100%{transform:scale(1); filter:none;}
+  }
+  @media (prefers-reduced-motion: reduce){ #lifeRow.hit{animation:none;} }
   #hud .btn{pointer-events:auto;padding:6px 14px;font-size:13px;}
   #stageName{color:var(--parchment-dim);}
   #starCount{color:var(--gold);}
+
+  /* 폰을 세로로 들었을 때 */
+  #rotate{
+    position:absolute;inset:0;z-index:60;display:none;
+    flex-direction:column;align-items:center;justify-content:center;gap:26px;
+    background:linear-gradient(160deg,#161e3c,#2b2050);
+    text-align:center;padding:26px;
+  }
+  #rotate.on{display:flex;}
+  #rotate .ph{
+    width:76px;height:124px;flex:none;
+    border:3px solid var(--parchment);border-radius:13px;
+    box-shadow:0 0 30px rgba(240,185,92,.25);
+    animation:tipOver 2.4s ease-in-out infinite;
+  }
+  #rotate .ph::after{
+    content:'';display:block;width:26px;height:3px;border-radius:2px;
+    background:var(--parchment-dim);margin:9px auto 0;
+  }
+  @keyframes tipOver{
+    0%,30%{transform:rotate(0deg);}
+    55%,100%{transform:rotate(-90deg);}
+  }
+  #rotate .big{font-size:19px;letter-spacing:.14em;color:var(--parchment);}
+  #rotate .small{font-size:13px;letter-spacing:.1em;color:var(--parchment-dim);line-height:2;}
+  @media (prefers-reduced-motion: reduce){
+    #rotate .ph{animation:none;transform:rotate(-90deg);}
+  }
 
   /* 터치 조작 */
   #touch{position:absolute;left:0;right:0;bottom:0;display:none;justify-content:space-between;padding:18px 20px 26px;pointer-events:none;}
   #touch.on{display:flex;}
   .pad{
-    pointer-events:auto;width:66px;height:66px;margin:0 6px;
-    border:1px solid rgba(243,230,200,.34);border-radius:50%;
-    background:rgba(13,20,48,.5);color:var(--parchment);
-    font-family:inherit;font-size:20px;line-height:1;
+    pointer-events:auto;width:74px;height:74px;margin:0 8px;
+    border:2px solid rgba(243,230,200,.42);border-radius:50%;
+    background:rgba(13,20,48,.42);color:var(--parchment);
+    font-family:inherit;font-size:24px;line-height:1;
     display:flex;align-items:center;justify-content:center;
+    backdrop-filter:blur(2px);
+    touch-action:none;user-select:none;
   }
-  .pad:active{background:rgba(240,185,92,.28);}
-  #jumpPad{width:78px;height:78px;font-size:14px;letter-spacing:.06em;}
+  .pad:active{background:rgba(240,185,92,.34);border-color:var(--gold);}
+  #jumpPad{width:92px;height:92px;font-size:15px;letter-spacing:.06em;}
 
   .fine{color:var(--parchment-dim);font-size:12px;letter-spacing:.08em;margin-top:16px;line-height:1.9;}
 
   /* 완독 화면 */
+  #endPrompt{
+    position:absolute;left:0;right:0;bottom:30px;z-index:40;
+    display:none;justify-content:center;align-items:center;gap:8px;
+  }
+  #endPrompt.on{display:flex;}
   #endLayer{
-    background:radial-gradient(130% 95% at 50% 30%, rgba(44,30,22,.76), rgba(10,14,34,.93));
+    background:radial-gradient(140% 100% at 50% 35%, rgba(26,18,14,.62), rgba(10,14,34,.88));
+    backdrop-filter:none;
     opacity:0; transition:opacity 1.6s ease;
+  }
+  /* 글씨만 읽히도록 작은 판을 깔고, 그 바깥은 파티가 그대로 보인다 */
+  #endPanel{
+    display:flex;flex-direction:column;align-items:center;
+    background:rgba(18,13,22,.74);
+    border:1px solid rgba(243,230,200,.18);
+    border-radius:4px;
+    padding:26px 30px 22px;
+    box-shadow:0 18px 50px rgba(0,0,0,.45);
   }
   #endLayer.vis{opacity:1;}
   @media (prefers-reduced-motion: reduce){ #endLayer{transition:none;opacity:1;} }
@@ -172,6 +228,7 @@
   <div id="hud">
     <div id="stageName">제 1 장</div>
     <div class="right">
+      <span id="lifeRow">♥♥♥</span>
       <span id="wingTime"></span>
       <span id="starCount">★ 0 / 3</span>
       <button class="btn" id="soundBtn">♪ 소리 켜짐</button>
@@ -189,6 +246,12 @@
     </div>
   </div>
 
+  <div id="rotate">
+    <div class="ph"></div>
+    <p class="big">폰을 옆으로 돌려주세요</p>
+    <p class="small">가로로 놓으면 바로 시작해요<br>화면 회전 잠금이 켜져 있으면 풀어주세요</p>
+  </div>
+
   <!-- 제목 -->
   <div class="layer on" id="titleLayer">
     <h1>밤의 도서관</h1>
@@ -198,7 +261,8 @@
       <button class="btn" id="shopBtn">상점</button>
     </div>
     <p class="fine">
-      ← → 움직이기 &nbsp;·&nbsp; 스페이스 점프 &nbsp;·&nbsp; 공중에서 한 번 더 눌러 2단 점프
+      ← → 움직이기 &nbsp;·&nbsp; 스페이스 점프 &nbsp;·&nbsp; 공중에서 한 번 더 눌러 2단 점프<br>
+      폰에서는 화살표로 움직이고, 점프 버튼이나 화면 아무 곳이나 눌러 점프해요
     </p>
     <div class="row" style="margin-top:18px">
       <button class="btn quiet" id="soundBtn2">소리 끄기</button>
@@ -230,7 +294,13 @@
   </div>
 
   <!-- 완독 -->
+  <div id="endPrompt">
+    <button class="btn primary" id="showRecordBtn">기록 보기</button>
+    <button class="btn quiet" id="promptSelectBtn">목차로</button>
+  </div>
+
   <div class="layer" id="endLayer">
+    <div id="endPanel">
     <div class="stamp"><span>완독</span></div>
     <div class="record">
       <div><span class="k">별 조각</span><span class="v" id="recStars">0 / 30</span></div>
@@ -241,6 +311,7 @@
     <div class="row">
       <button class="btn primary" id="endSelectBtn">목차로</button>
       <button class="btn quiet" id="endTitleBtn">표지로</button>
+    </div>
     </div>
   </div>
 
@@ -259,7 +330,7 @@
 
 /* ───────────── 저장 ───────────── */
 const SAVE_KEY = 'night_library_save_v1';
-const DEFAULT_SAVE = { cleared:[], stars:{}, coins:0, owned:['cat'], current:'cat', sound:true, totalFalls:0, playSec:0 };
+const DEFAULT_SAVE = { cleared:[], stars:{}, coins:0, owned:['cat'], current:'cat', sound:true, totalFalls:0, playSec:0, bg:'night' };
 
 function loadSave(){
   try{
@@ -279,6 +350,7 @@ function loadSave(){
       if(s.owned.includes(cur)) s.current = cur;
     }
     if(typeof d.sound==='boolean') s.sound = d.sound;
+    if(d.bg === 'night' || d.bg === 'pastel') s.bg = d.bg;
     if(typeof d.totalFalls==='number' && isFinite(d.totalFalls)) s.totalFalls = Math.max(0, Math.floor(d.totalFalls));
     if(typeof d.playSec==='number' && isFinite(d.playSec)) s.playSec = Math.max(0, d.playSec);
     return s;
@@ -301,79 +373,217 @@ function isUnlocked(i){ return i===0 || isCleared(i-1); }
 
 /* ───────────── 캐릭터 ───────────── */
 const CHARS = [
-  { id:'cat',   name:'작은 고양이',  desc:'첫 페이지부터 함께한 친구', price:0  },
-  { id:'fly',   name:'반딧불이',     desc:'혼자서도 조금 빛난다',     price:3  },
-  { id:'star',  name:'아기 별',      desc:'천장에서 떨어진 것 같다',   price:6  },
-  { id:'cloak', name:'망토 입은 아이',desc:'얼굴은 잘 보이지 않는다',  price:9  },
-  { id:'fox',   name:'아기 여우',     desc:'책 냄새를 따라 들어왔다',  price:12 }
+  { id:'cat',   name:'작은 고양이',   desc:'첫 페이지부터 함께한 친구',  price:0 },
+  { id:'fly',   name:'반딧불이',      desc:'혼자서도 조금 빛난다',      price:2 },
+  { id:'catB',  name:'검은 고양이',   desc:'코끝만 하얀 밤빛 고양이',   price:2 },
+  { id:'catC',  name:'삼색 고양이',   desc:'얼룩이 지도처럼 생겼다',    price:3 },
+  { id:'star',  name:'아기 별',       desc:'천장에서 떨어진 것 같다',    price:3 },
+  { id:'cloak', name:'망토 입은 아이', desc:'얼굴은 잘 보이지 않는다',   price:2 },
+  { id:'fox',   name:'아기 여우',     desc:'책 냄새를 따라 들어왔다',   price:3 }
 ];
 
 /* ───────────── 스테이지 ─────────────
    발판: [x, y, 너비, 높이] 또는 [x, y, 너비, 높이, 축, 폭, 속도, 위상]
 ------------------------------------- */
 const STAGES = [
-  { n:'첫 장을 넘기며', w:1900, sp:[60,380], g:[1780,390],
-    p:[[0,470,300,40],[380,470,220,40],[680,420,200,30],[960,470,240,40],[1280,400,200,30],[1560,470,340,40]],
-    s:[[490,400],[780,350],[1380,330]] },
 
-  { n:'사다리 서가', w:2250, sp:[60,380], g:[2120,390],
-    p:[[0,470,260,40],[320,430,150,26],[560,380,150,26],[800,330,150,26],[1040,280,150,26],[1300,470,300,40],[1680,400,180,26],[1940,470,310,40]],
-    s:[[630,320],[1110,220],[1770,340]] },
+  /* ───── 1장 · 첫 장을 넘기며 ─────
+     걷기 → 틈 → 2단 점프 → 숨은 책장 → 유리 통로 순서로 하나씩 알려준다 */
+  { n:'첫 장을 넘기며', w:4700, sp:[70,380], g:[4430,390],
+    p:[
+      [0,470,420,40],                      // 시작
+      [530,470,200,40],                    // 작은 틈 (한 번 점프)
+      [850,430,180,26],                    // 조금 높은 곳
+      [1180,470,220,40],
+      [1600,470,180,26],                   // 넓은 틈 — 2단 점프가 필요하다
+      [1980,470,440,40],                   // 숨은 책장이 있는 구간
+      [2070,372,200,24],                   // 책장 안쪽 선반
+      [2560,470,140,30],                   // 유리 통로 입구 앞
+      [3050,300,300,26],                   // 통로 출구 아래에서 받아주는 발판
+      [3480,370,190,26],
+      [3760,430,190,26],
+      [4020,470,680,40]                    // 마지막
+    ],
+    sec:[[2020,300,340,180]],              // 걸어 들어가면 흐려지는 책장
+    tube:[[2640,432, 2900,240, 3120,240]], // 유리 반납 통로
+    s:[[940,340],[2170,318],[3570,290]] },
 
-  { n:'넓은 틈', w:2220, sp:[60,380], g:[2080,390],
-    p:[[0,470,240,40],[430,470,160,30],[790,450,160,30],[1150,420,160,30],[1510,460,160,30],[1870,470,350,40]],
-    b:[[640,498,110,24],[1340,498,110,24]],
-    s:[[695,290],[1230,350],[1395,270]] },
+  /* ───── 2장 · 불 꺼진 서가 ─────
+     앞이 안 보인다. 등불을 하나씩 켜며 나아간다 */
+  { n:'불 꺼진 서가', w:4800, sp:[70,380], g:[4520,390], dark:1,
+    p:[
+      [0,470,380,40],
+      [500,470,240,40],
+      [880,420,170,26],
+      [1200,470,260,40],
+      [1600,470,150,26],
+      [1900,400,170,26],
+      [2200,470,300,40],
+      [2360,340,180,24],                   // 숨은 책장 안쪽
+      [2680,440,160,26],
+      [2980,470,240,40],
+      [3320,390,170,26],
+      [3620,470,200,26],
+      [3960,430,180,26],
+      [4240,470,560,40]
+    ],
+    sec:[[2320,270,300,190]],
+    lamp:[[300,300],[760,300],[1300,300],[1780,300],[2260,300],
+          [2760,300],[3200,300],[3700,300],[4180,300],[4520,300]],
+    b:[[1760,498,110,24]],
+    s:[[930,330],[2450,286],[4050,340]] },
 
-  { n:'흔들리는 책', w:2300, sp:[60,380], g:[2180,390],
-    p:[[0,470,260,40],[380,440,130,24,'x',90,1.1,0],[700,410,130,24,'x',90,1.0,1.5],
-       [1020,440,130,24,'x',100,1.2,0.6],[1360,400,140,26],[1660,440,130,24,'x',90,0.9,2.2],[1980,470,320,40]],
-    r:[[1520,320,320]],
-    s:[[440,370],[1080,370],[1680,250]] },
+  /* ───── 3장 · 높은 서가 ─────
+     세로로 긴 장. 위로 올라가기만 한다 */
+  { n:'높은 서가', w:2400, h:1700, sp:[70,1540], g:[2050,120],
+    p:[
+      [0,1630,420,40],
+      [520,1560,170,24],
+      [800,1470,170,24],
+      [400,1240,200,26],
+      [520,1380,170,24],
+      [800,1290,170,24],
+      [1120,1230,190,26],                  // 한숨 돌리는 자리
+      [1440,1140,170,24],
+      [1720,1050,170,24],
+      [1440,960,170,24],
+      [1120,880,190,26],
+      [800,800,170,24],
+      [480,720,170,24],
+      [760,620,170,24],
+      [1080,540,190,26],
+      [1420,450,170,24],
+      [1740,360,170,24],
+      [1420,270,170,24],
+      [1780,200,620,40]                    // 꼭대기
+    ],
+    b:[[300,1560,110,24],[1000,700,110,24]],
+    tube:[[240,1600, 240,1180, 470,1180]], // 밑에서 단숨에 올라가는 지름길
+    // 출구 아래 발판은 p 목록의 [400,1240,...]
+    sec:[[1120,1080,280,160]],
+    c:[[1180,1010,110,24],[1560,690,110,24]],
+    bt:[[1180,1180]],
+    s:[[560,1310],[1240,1020],[1500,390]] },
 
-  { n:'높은 서가', w:1520, sp:[60,380], g:[1380,390],
-    p:[[0,470,240,40],[300,410,120,24],[520,350,120,24],[300,290,120,24],[520,230,120,24],
-       [300,170,120,24],[620,140,160,26],[900,220,140,26],[1100,320,140,26],[1250,470,270,40]],
-    b:[[430,498,110,24],[760,498,110,24]],
-    wg:[[700,100]],
-    s:[[360,240],[580,180],[960,170]] },
+  /* ───── 4장 · 무너지는 서가 ─────
+     밟는 족족 무너진다. 멈출 수 없다 */
+  { n:'무너지는 서가', w:4600, sp:[70,380], g:[4340,390],
+    p:[
+      [0,470,340,40],
+      [1180,470,220,40],                   // 쉬어가는 단단한 자리
+      [2380,470,220,40],
+      [3480,470,220,40],
+      [3980,470,620,40]
+    ],
+    c:[
+      [450,470,120,24],[700,450,120,24],[950,470,120,24],
+      [1520,440,120,24],[1770,410,120,24],[2020,440,120,24],
+      [2600,470,110,24],[2830,430,110,24],[3060,390,110,24],[3280,430,110,24],
+      [3700,440,120,24]
+    ],
+    cart:[[3990,4560,470,2.4]],
+    dr:[[1290,380]],
+    b:[[1300,498,110,24],[2500,498,110,24]],
+    s:[[770,350],[2140,330],[3170,300]] },
 
-  { n:'좁은 발판', w:2200, sp:[60,380], g:[2030,390],
-    p:[[0,470,240,40],[360,450,90,22],[600,410,90,22],[840,450,90,22],[1080,400,90,22],
-       [1320,440,90,22],[1560,390,90,22],[1800,470,400,40]],
-    b:[[470,498,100,22],[950,498,100,22],[1430,498,100,22]],
-    s:[[645,300],[1125,290],[1605,280]] },
-
-  { n:'오르내리는 책', w:2300, sp:[60,380], g:[2120,390],
-    p:[[0,470,260,40],[400,420,130,24,'y',70,1.0,0],[700,420,130,24,'y',70,1.1,1.2],
-       [1000,420,130,24,'y',80,0.9,2.4],[1300,430,140,26],[1600,420,130,24,'y',70,1.2,0.8],[1900,470,400,40]],
-    r:[[1450,310,300]],
-    s:[[465,300],[1065,300],[1600,220]] },
-
-  { n:'지그재그', w:2400, sp:[60,380], g:[2280,390],
-    p:[[0,470,240,40],[400,400,120,24],[680,470,120,24],[960,390,120,24],[1240,460,120,24],
-       [1520,380,120,24],[1800,450,120,24],[2060,470,340,40]],
-    b:[[560,498,100,22],[1120,498,100,22],[1680,498,100,22]],
-    wg:[[1000,300]],
-    s:[[460,330],[1020,200],[1580,240]] },
-
-  { n:'긴 통로', w:3000, sp:[60,380], g:[2900,390],
-    p:[[0,470,260,40],[420,440,140,26],[720,400,140,26,'x',80,1.0,0],[1060,440,140,26],[1340,380,120,24],
-       [1620,440,140,26,'y',60,1.1,1.0],[1940,410,140,26],[2220,460,140,26],[2500,400,140,26],[2740,470,260,40]],
-    b:[[900,498,110,24],[2080,498,110,24]],
-    r:[[1180,300,240]],
-    wg:[[2380,360]],
-    s:[[490,370],[1290,220],[2140,330]] },
-
-  { n:'마지막 장', w:3200, sp:[60,380], g:[3080,390],
-    p:[[0,470,260,40],[400,430,120,24,'x',90,1.0,0],[740,400,120,24,'y',80,1.1,1.4],
-       [1060,440,120,24,'x',100,0.9,2.0],[1400,390,130,26],[1700,430,120,24,'y',90,1.2,0.5],
-       [2020,400,120,24,'x',90,1.0,1.8],[2360,440,130,26],[2640,390,130,26],[2900,470,300,40]],
-    b:[[620,498,110,24],[1880,498,110,24]],
-    r:[[2500,300,270]],
-    wg:[[1420,300]],
-    s:[[1465,210],[2100,290],[2640,200]] }
+  /* ───── 5장 · 마지막 장 ─────
+     지금까지 나온 것이 전부 나온다 */
+  { n:'마지막 장', w:5400, sp:[70,380], g:[5130,390],
+    p:[
+      [0,470,380,40],
+      [500,430,170,26],
+      [780,470,220,40],
+      [1350,340,240,26],                   // 통로 출구 아래 발판
+      [1700,400,180,26],
+      [2020,470,260,40],
+      [2160,330,200,24],                   // 숨은 책장 안쪽
+      [2620,470,420,30],                   // 책수레가 다니는 길
+      [3220,430,170,26],
+      [3700,470,200,26],
+      [4020,400,180,26],
+      [4340,470,220,26],
+      [4720,470,680,40]
+    ],
+    sec:[[2110,260,300,180]],
+    tube:[[960,440, 1180,290, 1400,290]],
+    c:[[3450,400,120,24]],
+    cart:[[2630,3030,470,2.6]],
+    b:[[1150,498,110,24],[3480,498,110,24]],
+    r:[[4120,300,300]],
+    wg:[[3300,340]],
+    bt:[[2280,300]],
+    s:[[1470,270],[2260,278],[4270,300]] }
 ];
+
+
+/* ───────────── 장마다 다른 밤 색 ─────────────
+   sky 하늘, glass 창유리, halo 창빛, beam 빛줄기,
+   shelf 책장, scrim 전체 덧칠, dust 먼지
+------------------------------------- */
+const THEMES_NIGHT = [
+  { name:'남색 밤',
+    sky:['#1a2748','#26375e','#141d38'], glass:['#f4c79c','#dda27a','#a9765a'],
+    halo:'255,206,150', beam:'255,216,168', moon:'#fff6e4',
+    frame:'#141c36', shelf:'#101736', shelfDark:'#0a0f28', shelfBook:'#1b2549',
+    scrim:'16,24,52', dust:'255,222,170', ink:'#f3e6c8', aura:'255,236,200' },
+
+  { name:'맑은 청록 밤',
+    sky:['#1d5560','#2a7480','#164450'], glass:['#ffe0a8','#eec084','#b8895d'],
+    halo:'255,222,160', beam:'255,230,180', moon:'#fffaea',
+    frame:'#123c44', shelf:'#154249', shelfDark:'#0e3038', shelfBook:'#215c66',
+    scrim:'16,52,60', dust:'255,230,176', ink:'#eafaf6', aura:'255,240,206' },
+
+  { name:'보라 밤',
+    sky:['#241a4a','#372360','#1b1236'], glass:['#f6bfc2','#dd9a9f','#a97177'],
+    halo:'255,196,180', beam:'255,208,196', moon:'#fff2ee',
+    frame:'#1a1338', shelf:'#1b1440', shelfDark:'#120c2c', shelfBook:'#2a1f55',
+    scrim:'24,16,52', dust:'255,212,180', ink:'#f2e6f0', aura:'255,230,214' },
+
+  { name:'자주 밤',
+    sky:['#2a1436','#43204c','#1d0f27'], glass:['#f8c294','#e09b6d','#a97050'],
+    halo:'255,202,146', beam:'255,214,164', moon:'#fff4e2',
+    frame:'#1a0d22', shelf:'#210f2a', shelfDark:'#16091d', shelfBook:'#33173f',
+    scrim:'26,12,34', dust:'255,216,164', ink:'#f6e4ea', aura:'255,232,196' },
+
+  { name:'남보라 밤',
+    sky:['#0d1130','#171a44','#080b22'], glass:['#f6e3b8','#dcc38d','#a89164'],
+    halo:'255,226,168', beam:'255,232,186', moon:'#fffaea',
+    frame:'#0a0d26', shelf:'#0a0e28', shelfDark:'#06081b', shelfBook:'#141a3c',
+    scrim:'8,10,30', dust:'255,230,180', ink:'#e8ecff', aura:'255,240,210' },
+
+  { name:'풀빛 밤',
+    sky:['#25563a','#347552','#1b432c'], glass:['#f8ecb0','#e0cd88','#a89562'],
+    halo:'255,238,172', beam:'255,242,190', moon:'#fffdf0',
+    frame:'#1a4029', shelf:'#1d4831', shelfDark:'#143523', shelfBook:'#2c6644',
+    scrim:'22,52,34', dust:'255,238,182', ink:'#f0fbdd', aura:'255,246,208' },
+
+  { name:'맑은 하늘 밤',
+    sky:['#33496b','#48628a','#243651'], glass:['#ffd9b8','#e9b192','#ac826c'],
+    halo:'255,222,186', beam:'255,232,202', moon:'#fff8f0',
+    frame:'#22344f', shelf:'#273b58', shelfDark:'#1b2b42', shelfBook:'#375074',
+    scrim:'30,44,66', dust:'255,228,188', ink:'#eef4ff', aura:'255,238,216' },
+
+  { name:'와인 밤',
+    sky:['#2a1220','#3f1c30','#1b0b16'], glass:['#f7cf90','#dfab6b','#a87f4e'],
+    halo:'255,210,146', beam:'255,220,164', moon:'#fff6e0',
+    frame:'#1a0b14', shelf:'#210f1a', shelfDark:'#160912', shelfBook:'#341a28',
+    scrim:'26,10,20', dust:'255,220,162', ink:'#f8e2ee', aura:'255,234,192' },
+
+  { name:'갈색 밤',
+    sky:['#231708','#3a2712','#170f05'], glass:['#ffd9a0','#eab578','#b08554'],
+    halo:'255,218,154', beam:'255,226,172', moon:'#fff8e6',
+    frame:'#170e05', shelf:'#1c1207', shelfDark:'#120b04', shelfBook:'#2e1e0c',
+    scrim:'22,14,6', dust:'255,226,170', ink:'#fbeed6', aura:'255,238,198' },
+
+  { name:'새벽 밤',
+    sky:['#2a2450','#3b3468','#181534'], glass:['#f4c3a2','#dc9c86','#a8747c'],
+    halo:'255,202,168', beam:'255,214,186', moon:'#fff4ec',
+    frame:'#171334', shelf:'#191536', shelfDark:'#100d24', shelfBook:'#282350',
+    scrim:'20,16,44', dust:'255,214,180', ink:'#f2e8f6', aura:'255,232,206' }
+];
+
+let TH = THEMES_NIGHT[0];
+
 
 /* ───────────── 캔버스 ───────────── */
 const VIEW_H = 540;
@@ -389,14 +599,22 @@ function resize(){
   scale = cv.height / VIEW_H;
   viewW = cv.width / scale;
 }
-window.addEventListener('resize', resize);
+window.addEventListener('resize', ()=>{ resize(); if(typeof checkOrient === 'function') checkOrient(); });
 window.addEventListener('orientationchange', ()=>setTimeout(resize,150));
 
 /* ───────────── 물리 상수 ───────────── */
 const GRAV = 0.62, MOVE = 3.6, JUMP = -12.2, MAX_FALL = 17;
 const BOUNCE = -19.5;        // 트램폴린 책
 const COYOTE = 0.11;         // 발판을 벗어난 뒤 봐주는 시간
-const WING_TIME = 7;         // 종이날개 지속 시간(초)
+const WING_TIME  = 7;        // 종이날개 지속 시간(초)
+const BOOT_TIME  = 8;        // 용수철 신발
+const DRINK_TIME = 8;        // 음료수
+const CRUMBLE_WAIT = 0.85;   // 무너지는 책이 버티는 시간
+const CRUMBLE_BACK = 4.0;    // 다시 돌아오는 시간
+const HURT_TIME  = 1.3;      // 부딪힌 뒤 잠깐 무적
+const MAX_LIVES  = 3;
+const TUBE_SPD   = 5.2;      // 유리 통로를 지나는 속도
+const LAMP_R     = 46;       // 등불이 켜지는 거리
 const PW = 26, PH = 30;
 const DEATH_Y = 760;
 
@@ -407,7 +625,15 @@ let t = 0;                // 흐르는 시간(초)
 let camX = 0;
 let plats = [];           // {bx,by,w,h,ax,amp,spd,ph,x,y,dx,dy,type}
 let ropes = [];           // {x,y,w}
-let items = [];           // 종이날개 {x,y,taken}
+let items = [];           // 아이템 {x,y,kind,taken}
+let carts = [];           // 책수레
+let tubes = [];           // 유리 반납 통로
+let secrets = [];         // 지나갈 수 있는 책장
+let lamps = [];           // 어두운 장의 등불
+let darkStage = false;
+let stageH = VIEW_H;      // 세로로 긴 장
+let camY = 0;
+let lives = MAX_LIVES;
 let falls = 0;
 let playAccum = 0;
 let stars = [];           // {x,y,got,pop}
@@ -421,13 +647,16 @@ let loopId = null;        // 루프는 항상 하나만
 function makePlayer(sp){
   return { x:sp[0], y:sp[1], vx:0, vy:0, w:PW, h:PH,
            grounded:false, wasGrounded:false, jumps:0, face:1, standIdx:-1, anim:0,
-           coyote:0, buffer:0, release:0, hang:-1, wings:0,
+           coyote:0, buffer:0, release:0, hang:-1, wings:0, boots:0, drink:0, hurt:0,
+           tube:-1, tp:0, tdir:1,
            safeIdx:-1, safeOff:0 };
 }
 
 function buildStage(i){
   const S = STAGES[i];
+  TH = THEMES_NIGHT[i % THEMES_NIGHT.length];
   stageW = S.w;
+  stageH = S.h || VIEW_H;
   const mk = (a, type) => ({
     bx:a[0], by:a[1], w:a[2], h:a[3],
     ax:a[4]||null, amp:a[5]||0, spd:a[6]||0, ph:a[7]||0,
@@ -435,8 +664,21 @@ function buildStage(i){
   });
   plats = S.p.map(a=>mk(a,'book'));
   (S.b||[]).forEach(a=>plats.push(mk(a,'bounce')));
+  (S.c||[]).forEach(a=>{ const q = mk(a,'crumble'); q.timer = -1; q.gone = 0; plats.push(q); });
   ropes = (S.r||[]).map(a=>({x:a[0], y:a[1], w:a[2]}));
-  items = (S.wg||[]).map(a=>({x:a[0], y:a[1], taken:false}));
+  items = [];
+  (S.wg||[]).forEach(a=>items.push({x:a[0], y:a[1], kind:'wing',  taken:false}));
+  (S.bt||[]).forEach(a=>items.push({x:a[0], y:a[1], kind:'boot',  taken:false}));
+  (S.dr||[]).forEach(a=>items.push({x:a[0], y:a[1], kind:'drink', taken:false}));
+  carts = (S.cart||[]).map(a=>({ x0:a[0], x1:a[1], y:a[2], spd:a[3],
+                                 x:a[0]+40, dir:1, w:46, h:38, roll:0 }));
+  tubes = (S.tube||[]).map(makeTube);
+  secrets = (S.sec||[]).map(a=>({ x:a[0], y:a[1], w:a[2], h:a[3], fade:0 }));
+  lamps = (S.lamp||[]).map(a=>({ x:a[0], y:a[1], on:false, glow:0 }));
+  darkStage = !!S.dark;
+  stageH = S.h || VIEW_H;
+  camY = 0;
+  lives = MAX_LIVES;
   falls = 0;
   const rec = stageStars(i);
   stars = S.s.map((a,k)=>({ x:a[0], y:a[1], got:rec[k], pop:0 }));
@@ -449,7 +691,7 @@ function buildStage(i){
     const big = k % 9 === 0;
     dust.push({
       x: Math.random()*stageW,
-      y: Math.random()*(VIEW_H - 40) + 20,
+      y: Math.random()*((S.h || VIEW_H) - 40) + 20,
       r: big ? (Math.random()*1.1 + 0.9) : (Math.random()*1.5 + 0.5),
       sp: Math.random()*0.18 + 0.04,
       tw: Math.random()*1.8 + 0.7,
@@ -605,7 +847,7 @@ const SONGS = RAW_SONGS.map(s=>{
            k:s.k, s:s.s, h:s.h,
            len: Math.max(lead.len, bass.len, chord.len) };
 });
-const STAGE_SONG = [0,0,1,1,2,2,3,3,4,4];
+const STAGE_SONG = [0, 1, 2, 3, 4];   // 장마다 다른 곡
 
 let AC = null, master = null, musicGain = null, sfxGain = null, noiseBuf = null;
 let soundOn = save.sound !== false;
@@ -744,6 +986,35 @@ function sfxBuy(){
   [659.25, 987.77].forEach((f,i)=> tone(t + i*0.09, f, 0.3, 0.11, 'triangle', sfxGain));
 }
 
+function sfxTube(){
+  if(!AC || !soundOn) return;
+  const t2 = AC.currentTime;
+  const o = AC.createOscillator(), g = AC.createGain();
+  o.type = 'sine';
+  o.frequency.setValueAtTime(420, t2);
+  o.frequency.exponentialRampToValueAtTime(1300, t2 + 0.22);
+  g.gain.setValueAtTime(0.09, t2);
+  g.gain.exponentialRampToValueAtTime(0.001, t2 + 0.26);
+  o.connect(g); g.connect(sfxGain);
+  o.start(t2); o.stop(t2 + 0.28);
+  drumNoise(t2, 0.22, 1800, 0.06);
+}
+function sfxHurt(){
+  if(!AC || !soundOn) return;
+  const t2 = AC.currentTime;
+  const o = AC.createOscillator(), g = AC.createGain();
+  o.type = 'square';
+  o.frequency.setValueAtTime(300, t2);
+  o.frequency.exponentialRampToValueAtTime(90, t2 + 0.25);
+  g.gain.setValueAtTime(0.14, t2);
+  g.gain.exponentialRampToValueAtTime(0.001, t2 + 0.3);
+  o.connect(g); g.connect(sfxGain);
+  o.start(t2); o.stop(t2 + 0.32);
+}
+function sfxCrumble(){
+  if(!AC || !soundOn) return;
+  drumNoise(AC.currentTime, 0.28, 700, 0.13);
+}
 function sfxBounce(){
   if(!AC || !soundOn) return;
   const t2 = AC.currentTime;
@@ -803,8 +1074,8 @@ window.addEventListener('keyup', e=>{
 window.addEventListener('blur', ()=>{ keys.left=keys.right=false; });
 
 function hold(el, on, off){
-  const start = e=>{ e.preventDefault(); on(); };
-  const end   = e=>{ e.preventDefault(); off(); };
+  const start = e=>{ e.preventDefault(); e.stopPropagation(); on(); };
+  const end   = e=>{ e.preventDefault(); e.stopPropagation(); off(); };
   el.addEventListener('touchstart', start, {passive:false});
   el.addEventListener('touchend', end, {passive:false});
   el.addEventListener('touchcancel', end, {passive:false});
@@ -816,9 +1087,71 @@ hold(document.getElementById('leftPad'),  ()=>keys.left=true,  ()=>keys.left=fal
 hold(document.getElementById('rightPad'), ()=>keys.right=true, ()=>keys.right=false);
 hold(document.getElementById('jumpPad'),  ()=>pressJump(),     ()=>{});
 
+// 화면 바탕 아무 곳이나 눌러도 점프 (화살표·점프 버튼 위는 제외된다)
+cv.addEventListener('touchstart', e=>{
+  if(screen === 'play'){ e.preventDefault(); pressJump(); }
+}, {passive:false});
+cv.addEventListener('mousedown', ()=>{
+  if(screen === 'play' && touchMode()) pressJump();
+});
+
 /* ───────────── 갱신 ───────────── */
+function makeTube(arr){
+  const pts = [];
+  for(let i=0;i<arr.length;i+=2) pts.push({x:arr[i], y:arr[i+1]});
+  const cum = [0];
+  for(let i=1;i<pts.length;i++)
+    cum.push(cum[i-1] + Math.hypot(pts[i].x-pts[i-1].x, pts[i].y-pts[i-1].y));
+  return { pts, cum, len: cum[cum.length-1] };
+}
+function tubeAt(T, d){
+  d = Math.max(0, Math.min(T.len, d));
+  for(let i=1;i<T.pts.length;i++){
+    if(d <= T.cum[i]){
+      const seg = T.cum[i] - T.cum[i-1] || 1;
+      const u = (d - T.cum[i-1]) / seg;
+      return { x: T.pts[i-1].x + (T.pts[i].x-T.pts[i-1].x)*u,
+               y: T.pts[i-1].y + (T.pts[i].y-T.pts[i-1].y)*u };
+    }
+  }
+  return T.pts[T.pts.length-1];
+}
+
 function overlap(ax,ay,aw,ah,bx,by,bw,bh){
   return ax < bx+bw && ax+aw > bx && ay < by+bh && ay+ah > by;
+}
+
+function flashLife(){
+  const lr = document.getElementById('lifeRow');
+  if(!lr) return;
+  lr.classList.remove('hit');
+  void lr.offsetWidth;            // 애니메이션을 다시 시작시키기 위한 한 줄
+  lr.classList.add('hit');
+}
+
+function hurt(){
+  const pl = player;
+  if(pl.hurt > 0) return;
+  pl.hurt = HURT_TIME;
+  pl.vy = -7.5;
+  pl.x -= pl.face * 30;
+  pl.hang = -1;
+  lives--;
+  flashLife();
+  sfxHurt();
+  updateHud();
+  for(let i=0;i<12;i++){
+    const a = Math.random()*Math.PI*2, sp = Math.random()*2.4+0.6;
+    particles.push({ type:'dot', x:pl.x+pl.w/2, y:pl.y+pl.h/2,
+                     vx:Math.cos(a)*sp, vy:Math.sin(a)*sp, g:0.02,
+                     life:0.7, max:0.7, size:Math.random()*2.2+1, c:'#e8657d' });
+  }
+  if(lives <= 0){
+    lives = MAX_LIVES;
+    pl.safeIdx = -1;            // 목숨을 다 쓰면 그 장을 처음부터
+    respawn();
+    updateHud();
+  }
 }
 
 function respawn(){
@@ -826,7 +1159,7 @@ function respawn(){
   let x, y;
   if(pl.safeIdx >= 0 && plats[pl.safeIdx]){
     const sp = plats[pl.safeIdx];
-    x = sp.x + pl.safeOff;
+    x = sp.x + sp.w/2 - pl.w/2;      // 가장자리가 아니라 발판 한가운데로
     y = sp.y - pl.h;
   }else{
     x = STAGES[stageIdx].sp[0];
@@ -852,30 +1185,79 @@ function update(dt){
       else          { const ny = p.by + off; p.dy = ny - p.y; p.y = ny; p.dx = 0; }
     }
     if(p.squash > 0) p.squash = Math.max(0, p.squash - dt*4);
+    if(p.type === 'crumble'){
+      if(p.gone > 0){
+        p.gone -= dt;
+        if(p.gone <= 0){ p.gone = 0; p.timer = -1; }
+      }else if(p.timer >= 0){
+        p.timer -= dt;
+        if(p.timer <= 0){
+          p.gone = CRUMBLE_BACK;
+          sfxCrumble();
+          for(let q=0;q<8;q++){
+            particles.push({ type:'dot', x:p.x + Math.random()*p.w, y:p.y + p.h,
+                             vx:(Math.random()-0.5)*1.2, vy:Math.random()*1.4+0.4, g:0.05,
+                             life:0.9, max:0.9, size:Math.random()*2.4+1, c:'#b08a6a' });
+          }
+        }
+      }
+    }
+  }
+
+  // 책수레
+  for(const ct of carts){
+    ct.x += ct.dir * ct.spd;
+    if(ct.x <= ct.x0){ ct.x = ct.x0; ct.dir = 1; }
+    if(ct.x + ct.w >= ct.x1){ ct.x = ct.x1 - ct.w; ct.dir = -1; }
+    ct.roll += ct.dir * ct.spd * 0.06;
   }
 
   const pl = player;
   pl.coyote  = Math.max(0, pl.coyote - dt);
   pl.release = Math.max(0, pl.release - dt);
+  pl.hurt    = Math.max(0, pl.hurt - dt);
   if(pl.wings > 0) pl.wings = Math.max(0, pl.wings - dt);
+  if(pl.boots > 0) pl.boots = Math.max(0, pl.boots - dt);
+  if(pl.drink > 0) pl.drink = Math.max(0, pl.drink - dt);
 
   // 점프 입력은 잠깐 저장해뒀다가 쓴다 (조금 일찍 눌러도 먹히도록)
   if(jumpQueued){ jumpQueued = false; pl.buffer = 0.14; }
   pl.buffer = Math.max(0, pl.buffer - dt);
 
+  /* ── 유리 통로를 타고 가는 중 ── */
+  if(pl.tube >= 0){
+    const T = tubes[pl.tube];
+    pl.tp += TUBE_SPD * pl.tdir;
+    pl.grounded = false; pl.standIdx = -1; pl.vy = 0; pl.vx = 0;
+    pl.anim += dt * 9;
+    if(pl.tp <= 0 || pl.tp >= T.len){
+      const d  = Math.max(0, Math.min(T.len, pl.tp));
+      const p1 = tubeAt(T, d), p0 = tubeAt(T, d - pl.tdir*14);
+      const dx = p1.x - p0.x, dy = p1.y - p0.y, m = Math.hypot(dx, dy) || 1;
+      pl.x = p1.x - pl.w/2; pl.y = p1.y - pl.h/2;
+      pl.vy = dy/m * 6 - 3;
+      pl.face = dx >= 0 ? 1 : -1;
+      pl.tube = -1; pl.release = 0.35; pl.jumps = 1; pl.buffer = 0;
+      sfxTube();
+    }else{
+      const p = tubeAt(T, pl.tp);
+      pl.x = p.x - pl.w/2; pl.y = p.y - pl.h/2;
+    }
+  }
   /* ── 밧줄에 매달린 상태 ── */
-  if(pl.hang >= 0){
+  else if(pl.hang >= 0){
     const r = ropes[pl.hang];
     pl.grounded = false; pl.standIdx = -1;
     pl.vy = 0; pl.jumps = 1;
     pl.y = r.y + 8;
-    pl.vx = (keys.right?MOVE:0) - (keys.left?MOVE:0);
+    const rs = MOVE * (pl.drink > 0 ? 1.5 : 1);
+    pl.vx = (keys.right?rs:0) - (keys.left?rs:0);
     if(pl.vx !== 0) pl.face = pl.vx > 0 ? 1 : -1;
     pl.x += pl.vx * 0.95;
     pl.anim += dt*4;
     if(pl.buffer > 0){
       pl.buffer = 0; pl.release = 0.25; pl.hang = -1;
-      pl.vy = JUMP * 0.95; pl.jumps = 1;
+      pl.vy = JUMP * (pl.boots > 0 ? 1.25 : 0.95); pl.jumps = 1;
       sfxJump(false);
     }else if(pl.x + pl.w < r.x - 8 || pl.x > r.x + r.w + 8){
       pl.hang = -1; pl.release = 0.15;
@@ -889,10 +1271,12 @@ function update(dt){
     }
 
     // 3) 좌우
-    pl.vx = (keys.right?MOVE:0) - (keys.left?MOVE:0);
+    const run = MOVE * (pl.drink > 0 ? 1.5 : 1);
+    pl.vx = (keys.right?run:0) - (keys.left?run:0);
     if(pl.vx !== 0) pl.face = pl.vx > 0 ? 1 : -1;
     pl.x += pl.vx;
     for(const p of plats){
+      if(p.gone > 0) continue;
       if(overlap(pl.x,pl.y,pl.w,pl.h,p.x,p.y,p.w,p.h)){
         if(pl.vx > 0) pl.x = p.x - pl.w;
         else if(pl.vx < 0) pl.x = p.x + p.w;
@@ -904,8 +1288,9 @@ function update(dt){
 
     // 4) 점프 — 발판을 막 벗어난 직후에도 한 번은 봐준다
     if(pl.buffer > 0){
+      const JV = JUMP * (pl.boots > 0 ? 1.3 : 1);
       if(pl.grounded || pl.coyote > 0){
-        pl.vy = JUMP; pl.jumps = 1; pl.coyote = 0; pl.buffer = 0;
+        pl.vy = JV; pl.jumps = 1; pl.coyote = 0; pl.buffer = 0;
         pl.grounded = false; pl.standIdx = -1;
         sfxJump(false);
       }else if(pl.wings > 0){
@@ -913,7 +1298,7 @@ function update(dt){
         feather(pl.x + pl.w/2, pl.y + pl.h*0.5, 4);
         sfxJump(true);
       }else if(pl.jumps < 2){
-        pl.vy = JUMP; pl.jumps = 2; pl.buffer = 0;
+        pl.vy = JV; pl.jumps = 2; pl.buffer = 0;
         puff(pl.x + pl.w/2, pl.y + pl.h, 5);
         sfxJump(true);
       }
@@ -929,6 +1314,7 @@ function update(dt){
     pl.standIdx = -1;
     for(let i=0;i<plats.length;i++){
       const p = plats[i];
+      if(p.gone > 0) continue;
       if(!overlap(pl.x,pl.y,pl.w,pl.h,p.x,p.y,p.w,p.h)) continue;
       if(pl.vy > 0){
         pl.y = p.y - pl.h;
@@ -940,6 +1326,7 @@ function update(dt){
           pl.vy = 0;
           pl.grounded = true;
           pl.standIdx = i;
+          if(p.type === 'crumble' && p.timer < 0) p.timer = CRUMBLE_WAIT;
           if(!pl.wasGrounded || prevStand !== i) letters(pl.x+pl.w/2, p.y, i);
         }
       }else if(pl.vy < 0){
@@ -952,7 +1339,17 @@ function update(dt){
       pl.jumps = 0;
       pl.coyote = COYOTE;
       const sp = plats[pl.standIdx];
-      if(sp && sp.type !== 'bounce'){ pl.safeIdx = pl.standIdx; pl.safeOff = pl.x - sp.x; }
+      if(sp && sp.type === 'book'){ pl.safeIdx = pl.standIdx; pl.safeOff = pl.x - sp.x; }
+    }
+
+    // 6-0) 유리 통로 입구
+    if(pl.release <= 0 && pl.tube < 0){
+      const px = pl.x + pl.w/2, py = pl.y + pl.h/2;
+      for(let i=0;i<tubes.length;i++){
+        const T = tubes[i], a = T.pts[0], b = T.pts[T.pts.length-1];
+        if(Math.hypot(px-a.x, py-a.y) < 30){ pl.tube = i; pl.tp = 0;     pl.tdir = 1;  sfxTube(); break; }
+        if(Math.hypot(px-b.x, py-b.y) < 30){ pl.tube = i; pl.tp = T.len; pl.tdir = -1; sfxTube(); break; }
+      }
     }
 
     // 6) 밧줄 잡기
@@ -986,30 +1383,58 @@ function update(dt){
     }
   }
 
-  // 8) 종이날개
+  // 8) 아이템
   for(const it of items){
     if(it.taken) continue;
     const dx = it.x - cx, dy = it.y - cy;
     if(dx*dx + dy*dy < 32*32){
       it.taken = true;
-      pl.wings = WING_TIME;
+      if(it.kind === 'boot')       pl.boots = BOOT_TIME;
+      else if(it.kind === 'drink') pl.drink = DRINK_TIME;
+      else                         pl.wings = WING_TIME;
       feather(it.x, it.y, 16);
       sfxWing();
-      updateHud();
     }
   }
   if(pl.wings > 0 && Math.random() < 0.25) feather(cx, cy + 6, 1);
+  if(pl.drink > 0 && Math.abs(pl.vx) > 0.1 && Math.random() < 0.4)
+    puff(cx - pl.face*10, pl.y + pl.h - 3, 1);
+
+  // 8-2) 책수레에 부딪히면
+  if(pl.hurt <= 0){
+    for(const ct of carts){
+      if(overlap(pl.x, pl.y, pl.w, pl.h, ct.x, ct.y - ct.h, ct.w, ct.h)){ hurt(); break; }
+    }
+  }
 
   // 9) 골인 — 점프해서 넘어가도 닿도록 판정 범위를 위로 넉넉히
   if(overlap(pl.x, pl.y, pl.w, pl.h, goal.x-24, goal.y-190, goal.w+48, goal.h+190)) finishStage();
 
   // 10) 낙하 — 스테이지를 다시 시작하지 않고 마지막으로 밟았던 발판으로 돌아온다
-  if(pl.y > DEATH_Y){
+  if(pl.y > stageH + 240){
     sfxFall();
     falls++;
     save.totalFalls++;
+    lives--;
+    flashLife();
+    if(lives <= 0){
+      lives = MAX_LIVES;
+      pl.safeIdx = -1;          // 목숨을 다 쓰면 그 장을 처음부터
+    }
     respawn();
     updateHud();
+  }
+
+  // 10-2) 숨은 책장이 흐려진다
+  for(const sc of secrets){
+    const near = overlap(pl.x-20, pl.y-20, pl.w+40, pl.h+40, sc.x, sc.y, sc.w, sc.h);
+    sc.fade += ((near ? 1 : 0) - sc.fade) * Math.min(1, dt*8);
+  }
+
+  // 10-3) 등불에 다가가면 켜진다
+  for(const lp of lamps){
+    if(!lp.on && Math.hypot(cx - lp.x, cy - lp.y) < LAMP_R){ lp.on = true; sfxStar(); }
+    if(lp.on) lp.glow = Math.min(1, lp.glow + dt*2.5);
   }
 
   // 11) 입자
@@ -1020,9 +1445,11 @@ function update(dt){
   }
   for(const s of stars){ if(s.pop > 0) s.pop = Math.max(0, s.pop - dt*2); }
 
-  // 12) 카메라
+  // 12) 카메라 (세로로 긴 장에서는 위아래로도 따라간다)
   const target = Math.max(0, Math.min(pl.x + pl.w/2 - viewW*0.42, Math.max(0, stageW - viewW)));
   camX += (target - camX) * Math.min(1, dt*7);
+  const targetY = Math.max(0, Math.min(pl.y + pl.h/2 - VIEW_H*0.5, Math.max(0, stageH - VIEW_H)));
+  camY += (targetY - camY) * Math.min(1, dt*6);
 }
 
 const GLYPHS = '가나다라마바사아자차카타파하ㄱㄴㄷㅁㅂㅅㅇAaBbEeMmSs'.split('');
@@ -1065,24 +1492,27 @@ function draw(){
   ctx.setTransform(1,0,0,1,0,0);
   // 배경
   const g = ctx.createLinearGradient(0,0,0,cv.height);
-  g.addColorStop(0,'#1a2748'); g.addColorStop(0.45,'#26375e'); g.addColorStop(1,'#141d38');
+  g.addColorStop(0, TH.sky[0]); g.addColorStop(0.45, TH.sky[1]); g.addColorStop(1, TH.sky[2]);
   ctx.fillStyle = g; ctx.fillRect(0,0,cv.width,cv.height);
 
-  ctx.setTransform(scale,0,0,scale, -camX*scale*0.28, 0);
+  ctx.setTransform(scale,0,0,scale, -camX*scale*0.28, -camY*scale*0.28);
   drawBackdrop();
 
   ctx.setTransform(1,0,0,1,0,0);
   const scrim = ctx.createLinearGradient(0,0,0,cv.height);
-  scrim.addColorStop(0,'rgba(16,24,52,0.10)');
-  scrim.addColorStop(0.6,'rgba(16,24,52,0.30)');
-  scrim.addColorStop(1,'rgba(16,24,52,0.62)');
+  scrim.addColorStop(0,   `rgba(${TH.scrim},0.04)`);
+  scrim.addColorStop(0.6, `rgba(${TH.scrim},0.10)`);
+  scrim.addColorStop(1,   `rgba(${TH.scrim},0.26)`);
   ctx.fillStyle = scrim; ctx.fillRect(0,0,cv.width,cv.height);
 
-  ctx.setTransform(scale,0,0,scale, -camX*scale, 0);
+  ctx.setTransform(scale,0,0,scale, -camX*scale, -camY*scale);
   drawDust();
   drawGoal();
+  drawTubes();
   drawRopes();
   for(let i=0;i<plats.length;i++) drawBook(plats[i], i);
+  drawCarts();
+  drawLamps();
   drawItems();
   drawStars();
   drawParticles();
@@ -1091,7 +1521,8 @@ function draw(){
     const st = player.hang >= 0 ? 'hang'
              : !player.grounded ? 'air'
              : Math.abs(player.vx) > 0.1 ? 'walk' : 'idle';
-    drawChar(ctx, save.current, player.x, player.y, player.w, player.h, player.face, player.anim, st);
+    const blink = player.hurt > 0 && Math.floor(player.hurt * 14) % 2 === 0;
+    if(!blink) drawChar(ctx, save.current, player.x, player.y, player.w, player.h, player.face, player.anim, st);
     if(player.hang >= 0 && ropes[player.hang]){
       const r = ropes[player.hang];
       const hx = player.x + player.w/2;
@@ -1102,6 +1533,9 @@ function draw(){
       ctx.beginPath(); ctx.moveTo(hx+4, player.y+4); ctx.lineTo(hx+3, hy); ctx.stroke();
     }
   }
+  drawTubeGlass();
+  drawSecrets();
+  if(darkStage) drawDarkness();
   if(screen === 'ending' || screen === 'end') drawEndingLayer();
 }
 
@@ -1133,8 +1567,8 @@ function drawWindow(wx, wy, ww, wh, n){
 
   // 창밖으로 새어나오는 빛
   const halo = ctx.createRadialGradient(cx, wy+wh*0.45, 10, cx, wy+wh*0.45, ww*1.5);
-  halo.addColorStop(0,'rgba(176,199,255,0.30)');
-  halo.addColorStop(1,'rgba(176,199,255,0)');
+  halo.addColorStop(0, `rgba(${TH.halo},0.30)`);
+  halo.addColorStop(1, `rgba(${TH.halo},0)`);
   ctx.fillStyle = halo;
   ctx.beginPath(); ctx.arc(cx, wy+wh*0.45, ww*1.5, 0, 6.283); ctx.fill();
 
@@ -1143,9 +1577,9 @@ function drawWindow(wx, wy, ww, wh, n){
   archPath(wx, wy, ww, wh);
   ctx.clip();
   const glass = ctx.createLinearGradient(0, wy, 0, wy+wh);
-  glass.addColorStop(0,'#93abe0');
-  glass.addColorStop(0.6,'#6d86bd');
-  glass.addColorStop(1,'#51648f');
+  glass.addColorStop(0, TH.glass[0]);
+  glass.addColorStop(0.6, TH.glass[1]);
+  glass.addColorStop(1, TH.glass[2]);
   ctx.fillStyle = glass;
   ctx.fillRect(wx, wy, ww, wh);
 
@@ -1156,7 +1590,7 @@ function drawWindow(wx, wy, ww, wh, n){
     mg.addColorStop(0,'rgba(255,255,240,0.9)');
     mg.addColorStop(1,'rgba(255,255,240,0)');
     ctx.fillStyle = mg; ctx.beginPath(); ctx.arc(mx,my,58,0,6.283); ctx.fill();
-    ctx.fillStyle = '#fffdf0';
+    ctx.fillStyle = TH.moon;
     ctx.beginPath(); ctx.arc(mx,my,25,0,6.283); ctx.fill();
     ctx.fillStyle = 'rgba(196,206,232,0.5)';
     ctx.beginPath(); ctx.arc(mx-7,my-5,5,0,6.283); ctx.fill();
@@ -1174,7 +1608,8 @@ function drawWindow(wx, wy, ww, wh, n){
   ctx.globalAlpha = 1;
 
   // 창살
-  ctx.strokeStyle = 'rgba(20,28,54,0.85)';
+  ctx.strokeStyle = TH.frame;
+  ctx.globalAlpha = 0.85;
   ctx.lineWidth = 5;
   ctx.beginPath();
   ctx.moveTo(cx, wy+6); ctx.lineTo(cx, wy+wh);
@@ -1182,22 +1617,23 @@ function drawWindow(wx, wy, ww, wh, n){
     ctx.moveTo(wx, y); ctx.lineTo(wx+ww, y);
   }
   ctx.stroke();
+  ctx.globalAlpha = 1;
   ctx.restore();
 
   // 창틀
-  ctx.strokeStyle = '#141c36';
+  ctx.strokeStyle = TH.frame;
   ctx.lineWidth = 9;
   archPath(wx, wy, ww, wh);
   ctx.stroke();
-  ctx.fillStyle = '#141c36';
+  ctx.fillStyle = TH.frame;
   ctx.fillRect(wx-14, wy+wh-6, ww+28, 14);
 
   // 바닥으로 쏟아지는 빛줄기
   const drift = Math.sin(t*0.35 + n) * 8;
   const beam = ctx.createLinearGradient(0, wy+wh, 0, 600);
-  beam.addColorStop(0,'rgba(190,212,255,0.20)');
-  beam.addColorStop(0.7,'rgba(190,212,255,0.07)');
-  beam.addColorStop(1,'rgba(190,212,255,0)');
+  beam.addColorStop(0,   `rgba(${TH.beam},0.20)`);
+  beam.addColorStop(0.7, `rgba(${TH.beam},0.07)`);
+  beam.addColorStop(1,   `rgba(${TH.beam},0)`);
   ctx.fillStyle = beam;
   ctx.beginPath();
   ctx.moveTo(wx+6, wy+wh);
@@ -1210,9 +1646,9 @@ function drawWindow(wx, wy, ww, wh, n){
 function drawShelfWall(sx, n){
   // 밝은 창문 앞에 서 있는 책장 — 검은 실루엣이라 형태가 잘 보임
   const w = 330, top = 150, bot = 560;
-  ctx.fillStyle = '#101736';
+  ctx.fillStyle = TH.shelf;
   ctx.fillRect(sx, top, w, bot-top);
-  ctx.fillStyle = '#0a0f28';
+  ctx.fillStyle = TH.shelfDark;
   ctx.fillRect(sx-8, top-12, w+16, 14);
 
   for(let r=0; r<3; r++){
@@ -1224,14 +1660,14 @@ function drawShelfWall(sx, n){
       ctx.save();
       ctx.translate(x, y+96);
       ctx.rotate(lean);
-      ctx.fillStyle = '#1b2549';
+      ctx.fillStyle = TH.shelfBook;
       ctx.fillRect(0, -bh, bw, bh);
-      ctx.fillStyle = 'rgba(190,212,255,0.10)';
+      ctx.fillStyle = `rgba(${TH.beam},0.10)`;
       ctx.fillRect(0, -bh, 2, bh);
       ctx.restore();
       x += bw + 3;
     }
-    ctx.fillStyle = '#0a0f28';
+    ctx.fillStyle = TH.shelfDark;
     ctx.fillRect(sx, y+96, w, 9);
   }
 }
@@ -1248,7 +1684,7 @@ function drawDust(){
       ctx.translate(x, y);
       ctx.rotate(t*0.3 + d.ph);
       ctx.globalAlpha = tw * 0.9;
-      ctx.fillStyle = '#e7eeff';
+      ctx.fillStyle = `rgba(${TH.dust},1)`;
       ctx.beginPath();
       for(let k=0;k<4;k++){
         const a = k*Math.PI/2;
@@ -1259,7 +1695,7 @@ function drawDust(){
       ctx.restore();
     }else{
       ctx.globalAlpha = tw * 0.7;
-      ctx.fillStyle = d.warm ? 'rgba(255,232,186,1)' : 'rgba(226,236,255,1)';
+      ctx.fillStyle = `rgba(${TH.dust},1)`;
       ctx.beginPath(); ctx.arc(x, y, d.r, 0, 6.283); ctx.fill();
     }
   }
@@ -1280,6 +1716,7 @@ function roundRect(x,y,w,h,r){
 function drawBook(p, i){
   if(p.x + p.w < camX - 80 || p.x > camX + viewW + 80) return;
   if(p.type === 'bounce'){ drawBouncer(p); return; }
+  if(p.type === 'crumble'){ drawCrumble(p); return; }
   const c = BOOK_COLORS[i % BOOK_COLORS.length];
 
   ctx.save();
@@ -1322,6 +1759,212 @@ function drawWings(pl){
   ctx.save(); ctx.rotate(0.6 - flap);
   ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(26,-11); ctx.lineTo(8,9); ctx.closePath(); ctx.fill();
   ctx.restore();
+  ctx.restore();
+}
+
+function drawTubes(){
+  for(const T of tubes){
+    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    ctx.beginPath();
+    ctx.moveTo(T.pts[0].x, T.pts[0].y);
+    for(let i=1;i<T.pts.length;i++) ctx.lineTo(T.pts[i].x, T.pts[i].y);
+    ctx.strokeStyle = 'rgba(150,220,235,0.20)'; ctx.lineWidth = 52; ctx.stroke();
+    ctx.strokeStyle = 'rgba(196,240,250,0.16)'; ctx.lineWidth = 42; ctx.stroke();
+    // 입구 두 개
+    for(const p of [T.pts[0], T.pts[T.pts.length-1]]){
+      const g = ctx.createRadialGradient(p.x,p.y,2,p.x,p.y,34);
+      g.addColorStop(0,'rgba(190,240,250,0.42)');
+      g.addColorStop(1,'rgba(190,240,250,0)');
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.arc(p.x,p.y,34,0,6.283); ctx.fill();
+      ctx.strokeStyle = 'rgba(210,246,255,0.7)'; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.arc(p.x,p.y,24,0,6.283); ctx.stroke();
+    }
+  }
+}
+
+function drawTubeGlass(){
+  // 캐릭터 위에 얇게 덮어 '유리 안에 있다'는 느낌을 준다
+  for(const T of tubes){
+    ctx.beginPath();
+    ctx.moveTo(T.pts[0].x, T.pts[0].y);
+    for(let i=1;i<T.pts.length;i++) ctx.lineTo(T.pts[i].x, T.pts[i].y);
+    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    ctx.strokeStyle = 'rgba(224,248,255,0.13)'; ctx.lineWidth = 42; ctx.stroke();
+    ctx.strokeStyle = 'rgba(255,255,255,0.30)'; ctx.lineWidth = 2.4; ctx.stroke();
+    ctx.save();
+    ctx.translate(0, -13);
+    ctx.strokeStyle = 'rgba(255,255,255,0.22)'; ctx.lineWidth = 3.4;
+    ctx.beginPath();
+    ctx.moveTo(T.pts[0].x, T.pts[0].y);
+    for(let i=1;i<T.pts.length;i++) ctx.lineTo(T.pts[i].x, T.pts[i].y);
+    ctx.stroke();
+    ctx.restore();
+  }
+}
+
+function drawSecrets(){
+  for(const sc of secrets){
+    if(sc.x + sc.w < camX - 60 || sc.x > camX + viewW + 60) continue;
+    const a = 1 - sc.fade * 0.88;
+    ctx.save();
+    ctx.globalAlpha = a;
+    ctx.fillStyle = TH.shelf;
+    ctx.fillRect(sc.x, sc.y, sc.w, sc.h);
+    ctx.fillStyle = TH.shelfDark;
+    ctx.fillRect(sc.x - 6, sc.y - 10, sc.w + 12, 12);
+    ctx.fillRect(sc.x, sc.y + sc.h - 9, sc.w, 9);
+    ctx.fillStyle = TH.shelfBook;
+    for(let x = sc.x + 12, b = 0; x < sc.x + sc.w - 16; b++){
+      const bw = 13 + ((b*7) % 5) * 3;
+      const bh = Math.min(sc.h - 26, 54 + ((b*11) % 6) * 7);
+      ctx.fillRect(x, sc.y + sc.h - 12 - bh, bw, bh);
+      x += bw + 4;
+    }
+    // 들어갈 수 있다는 힌트 — 아주 옅게 빛나는 테두리
+    ctx.globalAlpha = 0.30 + 0.18*Math.sin(t*2) + sc.fade*0.4;
+    ctx.strokeStyle = 'rgba(240,200,140,0.8)'; ctx.lineWidth = 2;
+    ctx.setLineDash([9, 7]);
+    ctx.strokeRect(sc.x + 1, sc.y + 1, sc.w - 2, sc.h - 2);
+    ctx.setLineDash([]);
+    ctx.restore();
+  }
+}
+
+function drawLamps(){
+  for(const lp of lamps){
+    if(lp.x < camX - 80 || lp.x > camX + viewW + 80) continue;
+    ctx.strokeStyle = 'rgba(30,24,18,0.6)'; ctx.lineWidth = 1.6;
+    ctx.beginPath(); ctx.moveTo(lp.x, lp.y - 60); ctx.lineTo(lp.x, lp.y - 10); ctx.stroke();
+    if(lp.glow > 0){
+      const g = ctx.createRadialGradient(lp.x, lp.y, 2, lp.x, lp.y, 70*lp.glow);
+      g.addColorStop(0, `rgba(255,200,110,${0.4*lp.glow})`);
+      g.addColorStop(1, 'rgba(255,200,110,0)');
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.arc(lp.x, lp.y, 70*lp.glow, 0, 6.283); ctx.fill();
+    }
+    ctx.fillStyle = lp.on ? '#ffd489' : '#4a4256';
+    ctx.beginPath();
+    ctx.moveTo(lp.x, lp.y-11); ctx.lineTo(lp.x+8, lp.y+2);
+    ctx.lineTo(lp.x, lp.y+11); ctx.lineTo(lp.x-8, lp.y+2);
+    ctx.closePath(); ctx.fill();
+  }
+}
+
+let darkCv = null, darkCtx = null;
+function drawDarkness(){
+  // 어둠은 따로 만든 막에 그린 뒤 화면 위에 얹는다.
+  // 화면에 바로 지우개를 쓰면 배경까지 같이 지워진다.
+  if(!darkCv){
+    darkCv = document.createElement('canvas');
+    darkCtx = darkCv.getContext('2d');
+  }
+  if(darkCv.width !== cv.width || darkCv.height !== cv.height){
+    darkCv.width = cv.width; darkCv.height = cv.height;
+    darkCtx = darkCv.getContext('2d');
+  }
+  const d = darkCtx;
+  d.setTransform(1,0,0,1,0,0);
+  d.globalCompositeOperation = 'source-over';
+  d.clearRect(0,0,darkCv.width,darkCv.height);
+  d.fillStyle = 'rgba(6,8,20,0.94)';
+  d.fillRect(0,0,darkCv.width,darkCv.height);
+
+  d.globalCompositeOperation = 'destination-out';
+  const punch = (wx, wy, r) => {
+    const sx = (wx - camX) * scale, sy = (wy - camY) * scale, sr = r * scale;
+    const g = d.createRadialGradient(sx, sy, sr*0.2, sx, sy, sr);
+    g.addColorStop(0,   'rgba(0,0,0,1)');
+    g.addColorStop(0.55,'rgba(0,0,0,0.82)');
+    g.addColorStop(1,   'rgba(0,0,0,0)');
+    d.fillStyle = g;
+    d.beginPath(); d.arc(sx, sy, sr, 0, 6.283); d.fill();
+  };
+  if(player) punch(player.x + player.w/2, player.y + player.h/2,
+                   150 + (player.wings > 0 ? 40 : 0) + Math.sin(t*2)*6);
+  for(const lp of lamps) if(lp.glow > 0) punch(lp.x, lp.y, 140 * lp.glow);
+  for(const st of stars) if(!st.got) punch(st.x, st.y, 46);
+  for(const it of items) if(!it.taken) punch(it.x, it.y, 46);
+  d.globalCompositeOperation = 'source-over';
+
+  ctx.setTransform(1,0,0,1,0,0);
+  ctx.drawImage(darkCv, 0, 0);
+}
+
+function drawCarts(){
+  for(const ct of carts){
+    if(ct.x + ct.w < camX - 80 || ct.x > camX + viewW + 80) continue;
+    const x = ct.x, y = ct.y;              // y = 바닥(발판 윗면)
+    const bob = Math.sin(ct.roll*2)*1.2;
+
+    ctx.fillStyle = 'rgba(0,0,0,0.28)';
+    ctx.beginPath(); ctx.ellipse(x+ct.w/2, y-1, ct.w*0.42, 3.5, 0, 0, 6.283); ctx.fill();
+
+    // 실린 책들
+    const cols = ['#c9455e','#3f7f6f','#c98a3e','#4a6bb5'];
+    for(let k=0;k<4;k++){
+      ctx.fillStyle = cols[k];
+      const bh = 13 + ((k*7) % 3) * 4;
+      ctx.fillRect(x + 7 + k*8, y - 14 - bh + bob, 7, bh);
+    }
+    // 수레 몸통
+    ctx.fillStyle = '#8a5f3a';
+    roundRect(x, y - 16 + bob, ct.w, 12, 3); ctx.fill();
+    ctx.fillStyle = '#6d4a2c';
+    roundRect(x + 2, y - 16 + bob, ct.w - 4, 4, 2); ctx.fill();
+    // 손잡이
+    ctx.strokeStyle = '#6d4a2c'; ctx.lineWidth = 2.6; ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(ct.dir > 0 ? x + 3 : x + ct.w - 3, y - 14 + bob);
+    ctx.lineTo(ct.dir > 0 ? x - 7 : x + ct.w + 7, y - 30 + bob);
+    ctx.stroke();
+    // 바퀴
+    ctx.fillStyle = '#43301f';
+    for(const wx of [x + 11, x + ct.w - 11]){
+      ctx.beginPath(); ctx.arc(wx, y - 4, 5.2, 0, 6.283); ctx.fill();
+      ctx.strokeStyle = '#c9a877'; ctx.lineWidth = 1.4;
+      ctx.beginPath();
+      ctx.moveTo(wx + Math.cos(ct.roll)*4, y - 4 + Math.sin(ct.roll)*4);
+      ctx.lineTo(wx - Math.cos(ct.roll)*4, y - 4 - Math.sin(ct.roll)*4);
+      ctx.stroke();
+    }
+  }
+}
+
+function drawCrumble(p){
+  if(p.gone > 0){                          // 무너진 뒤 — 자리만 희미하게 남는다
+    ctx.save();
+    ctx.globalAlpha = 0.22 + 0.18*Math.sin(t*4);
+    ctx.strokeStyle = '#b08a6a'; ctx.lineWidth = 1.6;
+    ctx.setLineDash([7, 6]);
+    roundRect(p.x, p.y, p.w, p.h, 4); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.restore();
+    return;
+  }
+  const shaking = p.timer >= 0;
+  const sx = shaking ? Math.sin(t*45)*2.4 : 0;
+  const sy = shaking ? Math.cos(t*38)*1.4 : 0;
+
+  ctx.save();
+  ctx.translate(sx, sy);
+  ctx.shadowColor = 'rgba(0,0,0,0.45)'; ctx.shadowBlur = 10; ctx.shadowOffsetY = 3;
+  ctx.fillStyle = shaking ? '#a4643f' : '#8f7050';
+  roundRect(p.x, p.y, p.w, p.h, 4); ctx.fill();
+  ctx.restore();
+
+  ctx.save();
+  ctx.translate(sx, sy);
+  ctx.fillStyle = '#e8d9bd';
+  roundRect(p.x+3, p.y, p.w-6, 5, 2); ctx.fill();
+  // 갈라진 금
+  ctx.strokeStyle = 'rgba(40,26,16,0.5)'; ctx.lineWidth = 1.4;
+  ctx.beginPath();
+  ctx.moveTo(p.x + p.w*0.3, p.y + 6);
+  ctx.lineTo(p.x + p.w*0.42, p.y + p.h - 4);
+  ctx.moveTo(p.x + p.w*0.66, p.y + 6);
+  ctx.lineTo(p.x + p.w*0.56, p.y + p.h - 4);
+  ctx.stroke();
   ctx.restore();
 }
 
@@ -1392,6 +2035,35 @@ function drawItems(){
   for(const it of items){
     if(it.taken) continue;
     const y = it.y + Math.sin(t*1.8 + it.x)*5;
+    if(it.kind === 'boot' || it.kind === 'drink'){
+      const warm = it.kind === 'boot' ? '186,240,220' : '255,190,120';
+      const gl2 = ctx.createRadialGradient(it.x, y, 0, it.x, y, 32);
+      gl2.addColorStop(0, `rgba(${warm},0.45)`);
+      gl2.addColorStop(1, `rgba(${warm},0)`);
+      ctx.fillStyle = gl2;
+      ctx.beginPath(); ctx.arc(it.x, y, 32, 0, 6.283); ctx.fill();
+      ctx.save(); ctx.translate(it.x, y);
+      if(it.kind === 'boot'){
+        ctx.fillStyle = '#3fae9a';
+        roundRect(-11, -4, 15, 12, 3); ctx.fill();
+        roundRect(-11, 4, 22, 6, 3); ctx.fill();
+        ctx.strokeStyle = '#bff3e4'; ctx.lineWidth = 1.6;
+        ctx.beginPath();
+        for(let k=0;k<3;k++){ ctx.moveTo(-13, 12 + k*3); ctx.lineTo(13, 12 + k*3); }
+        ctx.stroke();
+      }else{
+        ctx.fillStyle = '#f3e6c8';
+        roundRect(-7, -12, 14, 22, 3); ctx.fill();
+        ctx.fillStyle = '#e08a4a';
+        roundRect(-6, -3, 12, 12, 2); ctx.fill();
+        ctx.fillStyle = '#cf4f66';
+        roundRect(-8, -15, 16, 4, 2); ctx.fill();
+        ctx.strokeStyle = '#f3e6c8'; ctx.lineWidth = 2; ctx.lineCap='round';
+        ctx.beginPath(); ctx.moveTo(4, -14); ctx.lineTo(9, -22); ctx.stroke();
+      }
+      ctx.restore();
+      continue;
+    }
     const gl = ctx.createRadialGradient(it.x, y, 0, it.x, y, 34);
     gl.addColorStop(0,'rgba(226,236,255,0.45)');
     gl.addColorStop(1,'rgba(226,236,255,0)');
@@ -1437,6 +2109,7 @@ function drawStars(){
       ctx.quadraticCurveTo(0,0, Math.cos(ang+Math.PI/4)*sz*0.3, Math.sin(ang+Math.PI/4)*sz*0.3);
     }
     ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = 'rgba(120,74,20,0.5)'; ctx.lineWidth = 1.2; ctx.stroke();
     ctx.restore();
     ctx.globalAlpha = 1;
   }
@@ -1468,7 +2141,7 @@ function drawParticles(){
     const a = Math.max(0, q.life / q.max);
     if(q.type === 'ch'){
       ctx.globalAlpha = a * 0.85;
-      ctx.fillStyle = '#f3e6c8';
+      ctx.fillStyle = TH.ink;
       ctx.font = `${q.size}px 'Gowun Batang', serif`;
       ctx.textAlign = 'center';
       ctx.fillText(q.ch, q.x, q.y);
@@ -1509,8 +2182,8 @@ function feetPair(c, k, ph, walk, air, colFront, colBack, hipY, rw, rh){
 function armPair(c, k, ph, walk, air, col, x, y, rw, rh){
   for(const i of [1,0]){
     const p = ph + i*Math.PI + Math.PI;
-    const dx = air ? 0 : (walk ? Math.sin(p)*2.4*k : 0);
-    const dy = air ? -3.0*k : 0;
+    const dx = air ? 0 : (walk ? Math.sin(p)*1.6*k : 0);
+    const dy = air ? -2.2*k : 0;
     c.fillStyle = col;
     c.beginPath(); c.ellipse((i ? -x : x) + dx, y + dy, rw, rh, 0, 0, 6.283); c.fill();
   }
@@ -1531,63 +2204,111 @@ function drawChar(c, id, x, y, w, h, face, anim, state){
   c.translate(x + w/2, y + h);
   c.scale(face, 1);
 
-  c.fillStyle = 'rgba(0,0,0,0.28)';
+  // 밝은 벽에서도 캐릭터가 묻히지 않도록 뒤에 부드러운 그늘을 깐다
+  const aura = (typeof TH !== 'undefined' && TH.aura) ? TH.aura : '34,38,66';
+  const halo = c.createRadialGradient(0, -h*0.55, 2, 0, -h*0.55, h);
+  halo.addColorStop(0, `rgba(${aura},0.22)`);
+  halo.addColorStop(1, `rgba(${aura},0)`);
+  c.fillStyle = halo;
+  c.beginPath(); c.arc(0, -h*0.55, h, 0, 6.283); c.fill();
+
+  c.fillStyle = 'rgba(0,0,0,0.24)';
   c.beginPath(); c.ellipse(0, 2, w*0.42 * (air ? 0.75 : 1), 3.5, 0, 0, 6.283); c.fill();
 
-  if(id === 'cat'){
-    const cream = '#f3e6c8', creamDark = '#e2d0aa', dark = '#2a1b47';
+  if(id === 'cat' || id === 'catB' || id === 'catC'){
+    // 고양이 세 종류 — 그리는 방법은 같고 색만 다르다
+    const P = id === 'catB'
+      ? { body:'#565077', dark:'#453f63', foot:'#3a3556', ear:'#ad8aa4',
+          nose:'#d99aa8', eye:'#4a3a2e', shine:'rgba(255,255,255,0.95)',
+          whisk:'rgba(243,230,200,0.45)', mouth:'rgba(74,58,46,0.75)', blush:'rgba(224,120,140,0.34)',
+          muzzle:'#f2e4d0', eyeW:1.8, eyeH:2.3 }
+      : id === 'catC'
+      ? { body:'#f7efe2', dark:'#e6dac6', foot:'#d2c4ad', ear:'#e0a3b0',
+          nose:'#cf7f8e', eye:'#2a1b47', shine:'rgba(255,255,255,0.92)',
+          whisk:'rgba(42,27,71,0.3)', mouth:'rgba(42,27,71,0.65)', blush:'rgba(207,79,102,0.26)',
+          patchA:'#e08a4a', patchB:'#4a3f3a' }
+      : { body:'#f3e6c8', dark:'#e2d0aa', foot:'#cbb894', ear:'#e0a3b0',
+          nose:'#cf7f8e', eye:'#2a1b47', shine:'rgba(255,255,255,0.92)',
+          whisk:'rgba(42,27,71,0.3)', mouth:'rgba(42,27,71,0.65)', blush:'rgba(207,79,102,0.26)' };
 
     // 꼬리
     const tsw = Math.sin(ph*(walk?1:0.6)) * (walk?5:3) * k;
-    c.strokeStyle = creamDark; c.lineWidth = 3.4*k; c.lineCap = 'round';
+    c.strokeStyle = P.patchA || P.dark; c.lineWidth = 3.2*k; c.lineCap = 'round';
     c.beginPath();
     c.moveTo(-6*k, -10*k + bob);
     c.quadraticCurveTo(-17*k, -8*k + bob + tsw*0.4, -14.5*k, -20*k + bob + tsw);
     c.stroke();
 
-    feetPair(c, k, ph, walk, air, creamDark, '#cbb894', -7*k + bob, 3.3*k, 2.3*k);
+    feetPair(c, k, ph, walk, air, P.dark, P.foot, -7*k + bob, 3.3*k, 2.3*k);
 
     c.save(); c.translate(0, bob);
-    armPair(c, k, ph, walk, air, creamDark, 7.8*k, -13.5*k, 2.4*k, 3.2*k);
 
-    c.fillStyle = cream;
+    // 몸
+    c.fillStyle = P.body;
     c.beginPath(); c.ellipse(0, -13.4*k, 6.8*k, 6.8*k, 0, 0, 6.283); c.fill();
+    // 앞발 — 몸 뒤가 아니라 가슴 앞에 둔다 (뒤에 두면 꼬리처럼 보인다)
+    armPair(c, k, ph, walk, air, P.foot, 4.6*k, -11.5*k, 2.0*k, 2.4*k);
+    if(P.patchB){                       // 삼색: 등에 검은 얼룩
+      c.save();
+      c.beginPath(); c.ellipse(0, -13.4*k, 6.8*k, 6.8*k, 0, 0, 6.283); c.clip();
+      c.fillStyle = P.patchB;
+      c.beginPath(); c.ellipse(-4.4*k, -16*k, 4.4*k, 4.0*k, 0.3, 0, 6.283); c.fill();
+      c.restore();
+    }
 
     const hb = walk ? Math.sin(ph*2)*0.7*k : 0;
     const hy = -23.4*k + hb;
+    c.fillStyle = P.body;
     c.beginPath(); c.arc(0, hy, 8.6*k, 0, 6.283); c.fill();
+    if(P.patchA){                       // 삼색: 머리에 주황 얼룩
+      c.save();
+      c.beginPath(); c.arc(0, hy, 8.6*k, 0, 6.283); c.clip();
+      c.fillStyle = P.patchA;
+      c.beginPath(); c.ellipse(-5.4*k, hy-4.6*k, 5.2*k, 4.4*k, -0.35, 0, 6.283); c.fill();
+      c.fillStyle = P.patchB;
+      c.beginPath(); c.ellipse(6.6*k, hy-3.0*k, 3.6*k, 3.4*k, 0.3, 0, 6.283); c.fill();
+      c.restore();
+    }
 
     // 귀
     c.save(); c.translate(0, hy); c.rotate(walk ? Math.sin(ph)*0.08 : Math.sin(ph*0.5)*0.03);
-    c.fillStyle = cream;
+    c.fillStyle = P.patchA || P.body;
     c.beginPath(); c.moveTo(-8.5*k,-2*k); c.lineTo(-9.6*k,-14*k); c.lineTo(-2.4*k,-7.4*k); c.closePath(); c.fill();
+    c.fillStyle = P.body;
     c.beginPath(); c.moveTo( 8.5*k,-2*k); c.lineTo( 9.6*k,-14*k); c.lineTo( 2.4*k,-7.4*k); c.closePath(); c.fill();
-    c.fillStyle = '#e0a3b0';
+    c.fillStyle = P.ear;
     c.beginPath(); c.moveTo(-7.8*k,-3.6*k); c.lineTo(-8.6*k,-11.4*k); c.lineTo(-4.2*k,-7.4*k); c.closePath(); c.fill();
     c.beginPath(); c.moveTo( 7.8*k,-3.6*k); c.lineTo( 8.6*k,-11.4*k); c.lineTo( 4.2*k,-7.4*k); c.closePath(); c.fill();
     c.restore();
 
-    // 얼굴
-    c.fillStyle = dark;
-    c.beginPath(); c.ellipse(-3.7*k, hy-1.6*k, 1.5*k, air ? 2.4*k : 2.0*k, 0, 0, 6.283); c.fill();
-    c.beginPath(); c.ellipse( 3.7*k, hy-1.6*k, 1.5*k, air ? 2.4*k : 2.0*k, 0, 0, 6.283); c.fill();
-    c.fillStyle = 'rgba(255,255,255,0.92)';
-    c.beginPath(); c.arc(-3.1*k, hy-2.5*k, 0.62*k, 0, 6.283); c.fill();
-    c.beginPath(); c.arc( 4.3*k, hy-2.5*k, 0.62*k, 0, 6.283); c.fill();
-    c.fillStyle = '#cf7f8e';
+    // 얼굴 — 어두운 털이면 주둥이 둘레를 밝게 해서 표정이 보이게 한다
+    if(P.muzzle){
+      c.fillStyle = P.muzzle;
+      c.beginPath(); c.ellipse(0, hy+3.8*k, 4.2*k, 2.9*k, 0, 0, 6.283); c.fill();
+    }
+    const ew = (P.eyeW || 1.5) * k, eh = (P.eyeH || 2.0) * k * (air ? 1.2 : 1);
+    c.fillStyle = P.eye;
+    c.beginPath(); c.ellipse(-3.7*k, hy-1.6*k, ew, eh, 0, 0, 6.283); c.fill();
+    c.beginPath(); c.ellipse( 3.7*k, hy-1.6*k, ew, eh, 0, 0, 6.283); c.fill();
+    c.fillStyle = P.shine;
+    c.beginPath(); c.arc(-3.1*k, hy-2.5*k, 0.72*k, 0, 6.283); c.fill();
+    c.beginPath(); c.arc( 4.3*k, hy-2.5*k, 0.72*k, 0, 6.283); c.fill();
+    c.beginPath(); c.arc(-4.4*k, hy-0.5*k, 0.38*k, 0, 6.283); c.fill();
+    c.beginPath(); c.arc( 3.0*k, hy-0.5*k, 0.38*k, 0, 6.283); c.fill();
+    c.fillStyle = P.nose;
     c.beginPath();
     c.moveTo(0, hy+3.4*k); c.lineTo(-1.5*k, hy+1.7*k); c.lineTo(1.5*k, hy+1.7*k); c.closePath(); c.fill();
-    c.strokeStyle = 'rgba(42,27,71,0.65)'; c.lineWidth = 0.9*k;
+    c.strokeStyle = P.mouth; c.lineWidth = 0.9*k;
     c.beginPath(); c.arc(-1.4*k, hy+3.8*k, 1.5*k, 0, Math.PI); c.stroke();
     c.beginPath(); c.arc( 1.4*k, hy+3.8*k, 1.5*k, 0, Math.PI); c.stroke();
-    c.strokeStyle = 'rgba(42,27,71,0.3)'; c.lineWidth = 0.8*k;
+    c.strokeStyle = P.whisk; c.lineWidth = 0.8*k;
     c.beginPath();
     c.moveTo(-6.4*k, hy+1.6*k); c.lineTo(-13*k, hy+0.2*k);
     c.moveTo(-6.4*k, hy+3.2*k); c.lineTo(-13*k, hy+4.0*k);
     c.moveTo( 6.4*k, hy+1.6*k); c.lineTo( 13*k, hy+0.2*k);
     c.moveTo( 6.4*k, hy+3.2*k); c.lineTo( 13*k, hy+4.0*k);
     c.stroke();
-    c.fillStyle = 'rgba(207,79,102,0.26)';
+    c.fillStyle = P.blush;
     c.beginPath(); c.arc(-6.2*k, hy+2.4*k, 2.1*k, 0, 6.283); c.fill();
     c.beginPath(); c.arc( 6.2*k, hy+2.4*k, 2.1*k, 0, 6.283); c.fill();
     c.restore();
@@ -1725,12 +2446,12 @@ function drawChar(c, id, x, y, w, h, face, anim, state){
     feetPair(c, k, ph, walk, air, furDark, '#a55f2c', -7*k + bob, 3.2*k, 2.2*k);
 
     c.save(); c.translate(0, bob);
-    armPair(c, k, ph, walk, air, furDark, 7.6*k, -13.5*k, 2.4*k, 3.2*k);
 
     c.fillStyle = fur;
     c.beginPath(); c.ellipse(0, -13.4*k, 6.6*k, 6.8*k, 0, 0, 6.283); c.fill();
     c.fillStyle = cream;
     c.beginPath(); c.ellipse(0, -12.0*k, 3.8*k, 4.6*k, 0, 0, 6.283); c.fill();
+    armPair(c, k, ph, walk, air, '#a55f2c', 4.6*k, -11.5*k, 2.0*k, 2.4*k);
 
     const hb = walk ? Math.sin(ph*2)*0.7*k : 0;
     const hy = -23.4*k + hb;
@@ -1793,8 +2514,26 @@ let ending = null;
 
 function startEnding(){
   const pl = player;
+
+  // 파티가 열릴 발판을 찾아 모두를 그 위에 세운다 (허공에 뜨지 않게)
+  let gp = plats[pl.standIdx];
+  if(!gp || gp.type !== 'book'){
+    gp = null;
+    for(const p2 of plats){
+      if(p2.type !== 'book') continue;
+      if(pl.x + pl.w > p2.x && pl.x < p2.x + p2.w && p2.y >= pl.y + pl.h - 6){
+        if(!gp || p2.y < gp.y) gp = p2;
+      }
+    }
+  }
+  if(gp){
+    pl.x = gp.x + gp.w/2 - pl.w/2;
+    pl.y = gp.y - pl.h;
+  }
+  pl.vx = 0; pl.vy = 0; pl.hang = -1;
+
   // 파티가 시작되면 카메라를 여기에 고정한다. 이후 한 번도 움직이지 않는다.
-  camX = Math.max(0, Math.min(pl.x + pl.w/2 - viewW*0.5, Math.max(0, stageW - viewW)));
+  camX = Math.max(0, pl.x + pl.w/2 - viewW*0.5);   // 파티 때는 스테이지 끝 제한을 풀어 한가운데 둔다
   const e = { t:0, lamps:[], friends:[], fly:[], win:null, carded:false, fading:false };
 
   // 등불
@@ -1803,14 +2542,19 @@ function startEnding(){
     e.lamps.push({ x, y: 148 + (Math.abs(Math.round(x/170)) % 2) * 42 });
   }
 
-  // 친구들 (지금 쓰고 있는 캐릭터는 빼고)
-  const offs = [-50, -96, 50, 96];
-  CHARS.filter(c=>c.id !== save.current).forEach((c,j)=>{
-    const off = offs[j % offs.length];
-    // 화면 밖으로 밀려나지 않게 붙잡아둔다
-    const x1 = Math.max(camX + 24, Math.min(pl.x + off, camX + viewW - 52));
-    e.friends.push({ id:c.id, t0: E_FRIEND0 + j*E_FRIEND_GAP,
-                     x1, y: pl.y, dir: off > 0 ? -1 : 1 });
+  // 친구들 — 발판 폭에 맞춰 간격을 정하니 캐릭터가 늘어도 겹치지 않는다
+  const mates = CHARS.filter(c => c.id !== save.current);
+  const inner = gp ? gp.w - 70 : 260;
+  const half  = Math.ceil(mates.length / 2);
+  const sp    = Math.max(30, Math.min(46, inner / (half * 2)));
+  const loX   = gp ? gp.x + 10 : camX + 24;
+  const hiX   = gp ? gp.x + gp.w - pl.w - 10 : camX + viewW - 52;
+
+  mates.forEach((c, j) => {
+    const stepN = Math.floor(j/2) + 1;
+    const dir   = (j % 2 === 0) ? -1 : 1;
+    const x1    = Math.max(loX, Math.min(pl.x + dir * stepN * sp, hiX));
+    e.friends.push({ id:c.id, t0: E_FRIEND0 + j*E_FRIEND_GAP, x1, y: pl.y, dir: -dir });
   });
 
   // 가장 가까운 창문 찾기 (화면 좌표)
@@ -1869,13 +2613,21 @@ function fmtTime(sec){
   return m ? `${m}분 ${ss}초` : `${ss}초`;
 }
 
+const endPrompt = document.getElementById('endPrompt');
+
 function showEndCard(){
   let got = 0;
   for(let i=0;i<STAGES.length;i++) got += starTotal(i);
-  document.getElementById('recStars').textContent = `${got} / 30`;
+  document.getElementById('recStars').textContent = `${got} / ${STAGES.length*3}`;
   document.getElementById('recFalls').textContent = `${save.totalFalls}번`;
   document.getElementById('recTime').textContent  = fmtTime(save.playSec);
-  setSong(5);   // 카드가 뜨면 '완독'
+  // 별자리가 있는 쪽 반대편에 판을 놓는다 (친구들과 별자리를 가리지 않도록)
+  const panel = document.getElementById('endPanel');
+  const winMid = (ending && ending.win) ? ending.win.x + ending.win.w/2 : viewW/2;
+  panel.classList.toggle('right', winMid < viewW/2);
+  panel.classList.toggle('left',  winMid >= viewW/2);
+
+  setSong(5);   // 파티가 잦아들면 '완독'
   if(AC && musicGain){
     const g = musicGain.gain, now = AC.currentTime;
     g.cancelScheduledValues(now);
@@ -1883,8 +2635,11 @@ function showEndCard(){
     g.linearRampToValueAtTime(0.0001, now + 0.18);  // 건너뛰어도 딸깍 소리가 안 나게
     g.linearRampToValueAtTime(0.40,   now + 2.8);   // 조용히 스며들듯 시작
   }
-  show('end');
-  setTimeout(()=>layers.end.classList.add('vis'), 40);
+  // 파티 장면을 가리지 않도록, 기록은 바로 띄우지 않고 작은 버튼만 보여준다
+  screen = 'end';
+  hud.classList.remove('on');
+  touch.classList.remove('on');
+  endPrompt.classList.add('on');
 }
 
 function drawEndingLayer(){
@@ -1923,7 +2678,7 @@ function drawEndingLayer(){
   for(const f of e.friends){
     if(e.t < f.t0) continue;
     const u = Math.min(1, (e.t - f.t0) / E_FRIEND_WALK);
-    const startX = f.x1 + f.dir * -220;
+    const startX = f.x1 + f.dir * -95;
     const x = startX + (f.x1 - startX) * (1 - Math.pow(1-u, 3));
     const hop = u < 1 ? Math.abs(Math.sin((e.t - f.t0)*12)) * 5 : Math.abs(Math.sin(e.t*4)) * 3;
     drawChar(ctx, f.id, x, f.y - hop, PW, PH, u < 1 ? f.dir : (f.x1 > player.x ? -1 : 1), e.t*8, u < 1 ? 'walk' : 'idle');
@@ -1983,7 +2738,7 @@ function drawEndingLayer(){
   if(e.t > E_FADE){
     const u = Math.min(1, (e.t - E_FADE) / (E_CARD - E_FADE));
     ctx.setTransform(1,0,0,1,0,0);
-    ctx.fillStyle = `rgba(26,18,12,${u*0.42})`;
+    ctx.fillStyle = `rgba(26,18,12,${u*0.24})`;
     ctx.fillRect(0,0,cv.width,cv.height);
   }
 }
@@ -1999,24 +2754,40 @@ const layers = {
 const hud   = document.getElementById('hud');
 const touch = document.getElementById('touch');
 const isTouch = matchMedia('(hover: none)').matches;
+let forceTouch = false;                       // 컴퓨터에서 폰 화면을 미리 보는 용도
+function touchMode(){ return isTouch || forceTouch; }
+
+const rotateEl = document.getElementById('rotate');
+function checkOrient(){
+  const portrait = window.innerHeight > window.innerWidth;
+  const need = touchMode() && portrait;
+  rotateEl.classList.toggle('on', need);
+  if(need) keys.left = keys.right = false;    // 안내가 뜨는 동안은 조작을 멈춘다
+}
+window.addEventListener('orientationchange', ()=>setTimeout(checkOrient, 250));
 
 function show(name){
   screen = name;
+  endPrompt.classList.remove('on');
   for(const k in layers) layers[k].classList.toggle('on', k === name);
   hud.classList.toggle('on', name === 'play');
-  touch.classList.toggle('on', name === 'play' && isTouch);
+  touch.classList.toggle('on', name === 'play' && touchMode());
   if(name !== 'play'){ keys.left = keys.right = false; }
 }
 
 function updateHud(){
   document.getElementById('stageName').textContent = `제 ${stageIdx+1} 장 · ${STAGES[stageIdx].n}`;
   document.getElementById('starCount').textContent = `★ ${starTotal(stageIdx)} / 3`;
+  const lr = document.getElementById('lifeRow');
+  if(lr) lr.textContent = '♥'.repeat(Math.max(0, lives)) + '♡'.repeat(Math.max(0, MAX_LIVES - lives));
 }
 function updateWingHud(){
   const el = document.getElementById('wingTime');
-  if(!el) return;
-  const w = (player && player.wings > 0) ? Math.ceil(player.wings) : 0;
-  const txt = w ? `날개 ${w}초` : '';
+  if(!el || !player) return;
+  let txt = '';
+  if(player.wings > 0) txt = `날개 ${Math.ceil(player.wings)}초`;
+  else if(player.boots > 0) txt = `신발 ${Math.ceil(player.boots)}초`;
+  else if(player.drink > 0) txt = `음료수 ${Math.ceil(player.drink)}초`;
   if(el.textContent !== txt) el.textContent = txt;
 }
 
@@ -2138,6 +2909,15 @@ document.getElementById('selBackBtn').addEventListener('click', ()=>show('title'
 document.getElementById('exitBtn').addEventListener('click', gotoSelect);
 document.getElementById('soundBtn').addEventListener('click', toggleSound);
 document.getElementById('soundBtn2').addEventListener('click', toggleSound);
+document.getElementById('showRecordBtn').addEventListener('click', ()=>{
+  endPrompt.classList.remove('on');
+  show('end');
+  setTimeout(()=>layers.end.classList.add('vis'), 40);
+});
+document.getElementById('promptSelectBtn').addEventListener('click', ()=>{
+  ending = null; endPrompt.classList.remove('on');
+  fadeMusic(1, 0.5); gotoSelect();
+});
 document.getElementById('endSelectBtn').addEventListener('click', ()=>{ ending = null; layers.end.classList.remove('vis'); fadeMusic(1, 0.5); gotoSelect(); });
 document.getElementById('endTitleBtn').addEventListener('click', ()=>{ ending = null; layers.end.classList.remove('vis'); setSong(0); fadeMusic(1, 0.5); show('title'); });
 document.getElementById('toSelectBtn').addEventListener('click', gotoSelect);
@@ -2175,6 +2955,7 @@ resize();
 buildStage(0);
 setSong(0);
 updateSoundLabel();
+checkOrient();
 show('title');
 if(loopId === null) loopId = requestAnimationFrame(frame);
 
